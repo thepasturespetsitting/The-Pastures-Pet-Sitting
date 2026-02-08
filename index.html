@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Sitting Booking Service</title>
+    
+    <!-- EmailJS Library -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
     <style>
         :root {
             /* CUSTOMIZE THESE COLORS */
@@ -168,7 +172,7 @@
             background: var(--danger-color);
         }
 
-        .success-message, .error-message {
+        .success-message, .error-message, .info-message {
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -182,6 +186,11 @@
 
         .error-message {
             background: #f44336;
+            color: white;
+        }
+
+        .info-message {
+            background: #2196F3;
             color: white;
         }
 
@@ -354,13 +363,36 @@
             margin-bottom: 20px;
         }
 
-        .image-upload-preview {
-            margin-top: 10px;
+        .setup-notice {
+            background: #FFF3E0;
+            border: 2px solid #FF9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        .image-upload-preview img {
-            max-width: 200px;
+        .setup-notice h3 {
+            color: #F57C00;
+            margin-bottom: 10px;
+        }
+
+        .setup-step {
+            background: white;
+            padding: 15px;
             border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .setup-step h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .setup-step code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
         }
 
         @media (max-width: 768px) {
@@ -380,6 +412,11 @@
         .hidden {
             display: none !important;
         }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -388,10 +425,97 @@
             <div class="logo-container">
                 <!-- REPLACE THIS IMAGE URL WITH YOUR LOGO -->
                 <img src="https://via.placeholder.com/150x150.png?text=Your+Logo" alt="Logo" class="logo" id="siteLogo">
-                <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">To add your logo: Replace the image URL in the code</p>
             </div>
             <h1>🐾 Pet Sitting Service</h1>
             <p>Professional care for your furry friends</p>
+        </div>
+
+        <!-- Email Setup Notice (Only shows until configured) -->
+        <div id="setupNotice" class="card setup-notice">
+            <h3>📧 Email Notifications Setup Required</h3>
+            <p style="margin-bottom: 15px;">To receive booking notifications, please complete this one-time setup (takes 5 minutes):</p>
+            
+            <div class="setup-step">
+                <h4>Step 1: Create EmailJS Account</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>Go to <a href="https://www.emailjs.com" target="_blank" style="color: var(--primary-color); font-weight: 600;">emailjs.com</a></li>
+                    <li>Click "Sign Up" and create a free account</li>
+                    <li>Verify your email address</li>
+                </ol>
+            </div>
+
+            <div class="setup-step">
+                <h4>Step 2: Add Your Email Service</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>In EmailJS dashboard, go to "Email Services"</li>
+                    <li>Click "Add New Service"</li>
+                    <li>Choose your email provider (Gmail, Outlook, etc.)</li>
+                    <li>Follow the connection wizard</li>
+                    <li>Copy your <code>Service ID</code></li>
+                </ol>
+            </div>
+
+            <div class="setup-step">
+                <h4>Step 3: Create Email Template</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>Go to "Email Templates"</li>
+                    <li>Click "Create New Template"</li>
+                    <li>Use this template content:</li>
+                </ol>
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: monospace; font-size: 14px; overflow-x: auto;">
+Subject: New Pet Sitting Booking - {{pet_name}}<br><br>
+New booking request received!<br><br>
+CLIENT: {{client_name}}<br>
+EMAIL: {{client_email}}<br>
+PHONE: {{client_phone}}<br>
+ADDRESS: {{client_address}}<br><br>
+PET: {{pet_name}} ({{pet_type}})<br>
+DATE: {{booking_date}}<br>
+HOURS: {{hours}}<br>
+TOTAL PRICE: £{{total_price}}<br><br>
+VET: {{vet_name}} - {{vet_phone}}<br>
+VET ADDRESS: {{vet_address}}<br><br>
+{{#medications}}MEDICATIONS: {{medications}}{{/medications}}<br>
+{{#special_instructions}}SPECIAL INSTRUCTIONS: {{special_instructions}}{{/special_instructions}}<br>
+{{#booking_notes}}BOOKING NOTES: {{booking_notes}}{{/booking_notes}}<br><br>
+Calendar invite attached!<br><br>
+Log in to your admin panel to approve this booking.
+                </div>
+                <ol start="4" style="margin-left: 20px; line-height: 1.8;">
+                    <li>Save the template</li>
+                    <li>Copy your <code>Template ID</code></li>
+                </ol>
+            </div>
+
+            <div class="setup-step">
+                <h4>Step 4: Get Your Public Key</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li>Go to "Account" → "General"</li>
+                    <li>Copy your <code>Public Key</code></li>
+                </ol>
+            </div>
+
+            <div class="setup-step">
+                <h4>Step 5: Enter Your EmailJS Details Below</h4>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="setupServiceId">Service ID</label>
+                    <input type="text" id="setupServiceId" placeholder="e.g., service_abc123">
+                </div>
+                <div class="form-group">
+                    <label for="setupTemplateId">Template ID</label>
+                    <input type="text" id="setupTemplateId" placeholder="e.g., template_xyz789">
+                </div>
+                <div class="form-group">
+                    <label for="setupPublicKey">Public Key</label>
+                    <input type="text" id="setupPublicKey" placeholder="e.g., user_xyz123abc456">
+                </div>
+                <div class="form-group">
+                    <label for="setupAdminEmail">Your Email (where notifications go)</label>
+                    <input type="email" id="setupAdminEmail" placeholder="your@email.com">
+                </div>
+                <button class="button" onclick="saveEmailConfig()">Save Configuration</button>
+                <button class="button button-secondary" onclick="hideSetupNotice()">Skip for Now</button>
+            </div>
         </div>
 
         <!-- Login/Register Section -->
@@ -535,6 +659,7 @@
             <div id="bookService" class="card tab-content">
                 <h2 style="margin-bottom: 20px;">Book Pet Sitting Service</h2>
                 <div id="bookingSuccess" class="success-message"></div>
+                <div id="bookingError" class="error-message"></div>
                 
                 <form id="bookingForm">
                     <div class="form-group">
@@ -619,6 +744,7 @@
         <div id="adminDashboard" class="hidden">
             <div class="welcome-message">
                 <h3>Admin Dashboard</h3>
+                <button class="button" style="margin-top: 10px; background: white; color: var(--primary-color);" onclick="showEmailSetup()">⚙️ Email Settings</button>
                 <button class="button" style="margin-top: 10px; background: white; color: var(--primary-color);" onclick="logout()">Logout</button>
             </div>
 
@@ -645,6 +771,14 @@
     </div>
 
     <script>
+        // Initialize EmailJS
+        (function() {
+            const emailConfig = JSON.parse(localStorage.getItem('emailjsConfig'));
+            if (emailConfig && emailConfig.publicKey) {
+                emailjs.init(emailConfig.publicKey);
+            }
+        })();
+
         // Initialize data structures
         let users = JSON.parse(localStorage.getItem('petSittingUsers')) || [];
         let bookings = JSON.parse(localStorage.getItem('petSittingBookings')) || [];
@@ -655,6 +789,116 @@
         const HOURLY_RATE = 10;
         const MULTIPLE_PETS_FEE = 5;
         const BANK_HOLIDAY_FEE = 5;
+
+        // Check if email is configured
+        function checkEmailSetup() {
+            const emailConfig = JSON.parse(localStorage.getItem('emailjsConfig'));
+            if (!emailConfig || !emailConfig.serviceId || !emailConfig.templateId || !emailConfig.publicKey) {
+                document.getElementById('setupNotice').style.display = 'block';
+            } else {
+                document.getElementById('setupNotice').style.display = 'none';
+            }
+        }
+
+        function saveEmailConfig() {
+            const config = {
+                serviceId: document.getElementById('setupServiceId').value.trim(),
+                templateId: document.getElementById('setupTemplateId').value.trim(),
+                publicKey: document.getElementById('setupPublicKey').value.trim(),
+                adminEmail: document.getElementById('setupAdminEmail').value.trim()
+            };
+
+            if (!config.serviceId || !config.templateId || !config.publicKey || !config.adminEmail) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            localStorage.setItem('emailjsConfig', JSON.stringify(config));
+            emailjs.init(config.publicKey);
+            
+            document.getElementById('setupNotice').style.display = 'none';
+            alert('Email configuration saved! You will now receive booking notifications.');
+        }
+
+        function hideSetupNotice() {
+            document.getElementById('setupNotice').style.display = 'none';
+        }
+
+        function showEmailSetup() {
+            document.getElementById('setupNotice').style.display = 'block';
+            const config = JSON.parse(localStorage.getItem('emailjsConfig')) || {};
+            document.getElementById('setupServiceId').value = config.serviceId || '';
+            document.getElementById('setupTemplateId').value = config.templateId || '';
+            document.getElementById('setupPublicKey').value = config.publicKey || '';
+            document.getElementById('setupAdminEmail').value = config.adminEmail || '';
+        }
+
+        // Send email notification with calendar invite
+        async function sendBookingEmail(booking) {
+            const emailConfig = JSON.parse(localStorage.getItem('emailjsConfig'));
+            
+            if (!emailConfig || !emailConfig.serviceId || !emailConfig.templateId || !emailConfig.adminEmail) {
+                console.log('Email not configured - skipping notification');
+                return;
+            }
+
+            try {
+                // Create calendar event (iCal format)
+                const startDate = new Date(booking.date + 'T09:00:00');
+                const endDate = new Date(startDate.getTime() + (booking.hours * 60 * 60 * 1000));
+                
+                const formatICalDate = (date) => {
+                    return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                };
+
+                const icsContent = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//Pet Sitting Service//Booking//EN',
+                    'BEGIN:VEVENT',
+                    `UID:${booking.id}@petsitting`,
+                    `DTSTAMP:${formatICalDate(new Date())}`,
+                    `DTSTART:${formatICalDate(startDate)}`,
+                    `DTEND:${formatICalDate(endDate)}`,
+                    `SUMMARY:Pet Sitting - ${booking.pet.name}`,
+                    `DESCRIPTION:Pet sitting appointment for ${booking.userName}\\nPet: ${booking.pet.name} (${booking.pet.type})\\nAddress: ${booking.userAddress}\\nPhone: ${booking.userPhone}`,
+                    `LOCATION:${booking.userAddress}`,
+                    'STATUS:CONFIRMED',
+                    'END:VEVENT',
+                    'END:VCALENDAR'
+                ].join('\r\n');
+
+                const templateParams = {
+                    to_email: emailConfig.adminEmail,
+                    client_name: booking.userName,
+                    client_email: booking.userEmail,
+                    client_phone: booking.userPhone,
+                    client_address: booking.userAddress,
+                    pet_name: booking.pet.name,
+                    pet_type: booking.pet.type,
+                    booking_date: formatDate(booking.date),
+                    hours: booking.hours,
+                    total_price: booking.totalPrice.toFixed(2),
+                    vet_name: booking.pet.vetName,
+                    vet_phone: booking.pet.vetPhone,
+                    vet_address: booking.pet.vetAddress,
+                    medications: booking.pet.medications || 'None',
+                    special_instructions: booking.pet.specialInstructions || 'None',
+                    booking_notes: booking.notes || 'None',
+                    calendar_invite: icsContent
+                };
+
+                await emailjs.send(
+                    emailConfig.serviceId,
+                    emailConfig.templateId,
+                    templateParams
+                );
+
+                console.log('Email notification sent successfully');
+            } catch (error) {
+                console.error('Failed to send email:', error);
+            }
+        }
 
         // Auth functions
         function showRegister() {
@@ -736,10 +980,12 @@
             document.getElementById('authSection').classList.remove('hidden');
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
+            checkEmailSetup();
         }
 
         function showClientDashboard() {
             document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('setupNotice').style.display = 'none';
             document.getElementById('clientDashboard').classList.remove('hidden');
             document.getElementById('userName').textContent = currentUser.name;
             loadPets();
@@ -750,6 +996,7 @@
 
         function showAdminDashboard() {
             document.getElementById('adminAuthSection').classList.add('hidden');
+            document.getElementById('setupNotice').style.display = 'none';
             document.getElementById('adminDashboard').classList.remove('hidden');
             loadAdminBookings();
             updateAdminStats();
@@ -890,8 +1137,12 @@
         }
 
         // Booking management
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBookingBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
 
             const petId = parseInt(document.getElementById('bookingPet').value);
             const pet = currentUser.pets.find(p => p.id === petId);
@@ -917,9 +1168,18 @@
             bookings.push(booking);
             localStorage.setItem('petSittingBookings', JSON.stringify(bookings));
 
-            showSuccess('bookingSuccess', 'Booking request submitted! Awaiting approval from the pet sitter.');
+            // Send email notification
+            try {
+                await sendBookingEmail(booking);
+                showSuccess('bookingSuccess', 'Booking request submitted! You will receive a confirmation email once approved.');
+            } catch (error) {
+                showSuccess('bookingSuccess', 'Booking request submitted! Awaiting approval from the pet sitter.');
+            }
+
             document.getElementById('bookingForm').reset();
             document.getElementById('liabilityAgreement').checked = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Booking Request';
             updateSubmitButton();
             calculatePrice();
         });
@@ -1097,6 +1357,7 @@
 
         // Initialize
         calculatePrice();
+        checkEmailSetup();
 
         // Admin access link (hidden feature - click logo 5 times)
         let logoClicks = 0;
@@ -1104,6 +1365,7 @@
             logoClicks++;
             if (logoClicks >= 5) {
                 document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('setupNotice').style.display = 'none';
                 document.getElementById('adminAuthSection').classList.remove('hidden');
                 logoClicks = 0;
             }
